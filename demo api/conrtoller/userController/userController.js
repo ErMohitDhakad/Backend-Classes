@@ -1,8 +1,10 @@
 const UserModel = require("../../models/users/userModel");
 const bcrypt = require("bcrypt");
 
+// api to create user
 exports.addUser = async (req, res) => {
   // const { fullname, username, contact, email } = req.body;
+  // extracting user data from body
   const body = req.body;
 
   if (
@@ -35,6 +37,7 @@ exports.addUser = async (req, res) => {
   }
 };
 
+// api to get user data using find
 exports.getUsers = async (req, res) => {
   try {
     // const data = await UserModel.find({}, { fullname: 1, email: 1, _id:0 });
@@ -48,6 +51,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+// api to delete user based on id
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,6 +67,8 @@ exports.deleteUser = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+// api to delete user based on email
 exports.deleteUserByEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -74,6 +80,69 @@ exports.deleteUserByEmail = async (req, res) => {
       return res.status(404).json({ message: "No Record Found" });
     }
     return res.status(200).json({ message: "User Deleted Successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// api to update user using long way
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Id is Required" });
+    }
+    const { fullname, username, contact, email, password } = req.body;
+    const updatedUser = {};
+    if (fullname) updatedUser.fullname = fullname;
+    if (username) updatedUser.username = username;
+    if (contact) updatedUser.contact = contact;
+    if (email) updatedUser.email = email;
+    if (password) updatedUser.password = password;
+
+    const result = await UserModel.findByIdAndUpdate(
+      id,
+      { $set: updatedUser },
+      { new: true }
+    );
+    if (!result) {
+      return res.status(404).json({ message: "Id does not found" });
+    }
+    return res.status(200).json({
+      message: "User is Updated Successfully",
+      updatedData: updatedUser,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to Update User" });
+  }
+};
+
+// api to updateUser in a easy way
+exports.updateTheUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Id is Required" });
+    }
+    const { fullname, username, contact, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        fullname,
+        username,
+        contact,
+        email,
+        password: hashedPassword,
+      },
+      { new: true }
+    );
+    if (!result) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+    return res
+      .status(200)
+      .json({ msg: "User is Updated Successfully", user: result });
   } catch (err) {
     return res.status(500).json({ message: "Internal Server Error" });
   }

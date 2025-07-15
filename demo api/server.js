@@ -1,9 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const router = require("./routes/userRoutes/userRoute");
+const cors = require('cors');
+
 
 const app = express();
 app.use(express.json());
+
+app.use(cors({
+  // origin:"http://localhost:3000",
+  methods:["GET","POST","PATCH","PUT","DELETE"],
+  credentials: true
+
+}));
 
 mongoose
   .connect("mongodb://localhost:27017/myDatabase")

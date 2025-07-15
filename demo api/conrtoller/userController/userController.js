@@ -1,5 +1,8 @@
 const UserModel = require("../../models/users/userModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const SECRET_KEY = "jdsl;fkj2@$(*jsdlfj";
 
 // api to create user
 exports.addUser = async (req, res) => {
@@ -145,5 +148,35 @@ exports.updateTheUser = async (req, res) => {
       .json({ msg: "User is Updated Successfully", user: result });
   } catch (err) {
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// api for login
+exports.loginUser = async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ msg: "Username and Password is Required" });
+  }
+  try {
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+    // const validPassword = user.password === password;
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ msg: "Invalid Password" });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
+    return res.status(200).json({ msg: "Login Successful", token });
+  } catch (err) {
+    return res.status(500).json({ msg: "Internal Server Error" });
   }
 };

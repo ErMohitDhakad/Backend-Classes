@@ -2,7 +2,8 @@ const UserModel = require("../../models/users/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const SECRET_KEY = "jdsl;fkj2@$(*jsdlfj";
+
+const SECRET_KEY = process.env.SECRET_KEY;
 
 // api to create user
 exports.addUser = async (req, res) => {
@@ -180,3 +181,4 @@ exports.loginUser = async (req, res) => {
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+

@@ -5,6 +5,8 @@ const cors = require("cors");
 require("dotenv").config();
 const path = require("path");
 const nodemailer = require("nodemailer");
+const multer  = require('multer');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -63,6 +65,33 @@ app.post("/send-email", async (req, res) => {
       .status(500)
       .json({ error: "Failed to send email", details: error.message });
   }
+});
+
+const uploadDir = path.join(__dirname, 'uploads');
+
+// ✅ Create the uploads folder if it doesn't exist
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Uploads folder created.');
+}
+
+// 📦 Configure storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Save file with timestamp + original extension
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// 📤 Route to upload file
+app.post('/upload', upload.single('avatar'), (req, res) => {
+  if (!req.file) return res.status(400).send('No file uploaded.');
+  res.send(`✅ File uploaded: ${req.file.filename}`);
 });
 
 mongoose
